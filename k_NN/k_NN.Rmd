@@ -1,0 +1,53 @@
+---
+title: "Diagnosing breast cancer with the k-NN algorithm"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Information
+Diagnosing breast cancer with the **k-NN** algorithm, data downloaded from  http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/.
+
+
+## Step 1. Download  and prepare data
+
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE}
+wbcd <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data", sep = ",", header = F, stringsAsFactors = FALSE)
+colnames(wbcd)<-c("id","diagnosis","radius_mean","texture_mean","perimeter_mean","area_mean")
+head(wbcd)
+```
+
+## Step 2. Transformation – normalizing numeric data
+
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE}
+wbcd <- wbcd[-1]
+wbcd$diagnosis<- factor(wbcd$diagnosis, levels = c("B", "M"), labels = c("Benign", "Malignant"))
+#round(prop.table(table(wbcd$diagnosis)) * 100, digits = 1)
+#summary(wbcd[c("radius_mean", "area_mean")])
+
+normalize <- function(x){
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+wbcd_n <- as.data.frame(lapply(wbcd[2:31], normalize))
+summary(wbcd_n$area_mean)
+```
+
+
+
+
+# step 3. Data preparation – creating training and test datasets
+
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE}
+
+
+
+
+
+
+```
+
