@@ -9,6 +9,8 @@ Diagnosing breast cancer with the **k-NN** algorithm, data downloaded from <http
 Step 1. Download and prepare data
 ---------------------------------
 
+-   直接从网站获取数据
+
 ``` r
 wbcd <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data", 
     sep = ",", header = F, stringsAsFactors = FALSE)
@@ -49,6 +51,8 @@ head(wbcd)
 Step 2. Transformation – normalizing numeric data
 -------------------------------------------------
 
+-   癌症数据均一化处理
+
 ``` r
 wbcd <- wbcd[-1]
 wbcd$diagnosis <- factor(wbcd$diagnosis, levels = c("B", "M"), labels = c("Benign", 
@@ -67,5 +71,334 @@ summary(wbcd_n$area_mean)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##  0.0000  0.1174  0.1729  0.2169  0.2711  1.0000
 
-step 3. Data preparation – creating training and test datasets
-==============================================================
+step 3. Training a model on the data
+------------------------------------
+
+-   训练模型
+
+``` r
+wbcd_train <- wbcd_n[1:469, ]
+wbcd_test <- wbcd_n[470:569, ]
+
+wbcd_train_labels <- wbcd[1:469, 1]
+wbcd_test_labels <- wbcd[470:569, 1]
+
+library(class)
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 21)
+```
+
+step 4. Evaluating model performance
+------------------------------------
+
+-   评估数据模型
+
+``` r
+library(gmodels)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        77 |         0 |        77 | 
+    ##                  |     1.000 |     0.000 |     0.770 | 
+    ##                  |     0.975 |     0.000 |           | 
+    ##                  |     0.770 |     0.000 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         2 |        21 |        23 | 
+    ##                  |     0.087 |     0.913 |     0.230 | 
+    ##                  |     0.025 |     1.000 |           | 
+    ##                  |     0.020 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        79 |        21 |       100 | 
+    ##                  |     0.790 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+错误率仅为2%，即该模型可准确鉴定98%的肿瘤；
+
+step 5. Improving model performance
+-----------------------------------
+
+-   提升模型鉴别能力
+
+``` r
+# z-score standardization
+wbcd_z <- as.data.frame(scale(wbcd[-1]))
+summary(wbcd_z$area_mean)  # To confirm that the transformation was applied correctly;
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ## -1.4532 -0.6666 -0.2949  0.0000  0.3632  5.2459
+
+``` r
+wbcd_train <- wbcd_z[1:469, ]
+wbcd_test <- wbcd_z[470:569, ]
+wbcd_train_labels <- wbcd[1:469, 1]
+wbcd_test_labels <- wbcd[470:569, 1]
+
+wbcd_test_pred <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 21)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        77 |         0 |        77 | 
+    ##                  |     1.000 |     0.000 |     0.770 | 
+    ##                  |     0.975 |     0.000 |           | 
+    ##                  |     0.770 |     0.000 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         2 |        21 |        23 | 
+    ##                  |     0.087 |     0.913 |     0.230 | 
+    ##                  |     0.025 |     1.000 |           | 
+    ##                  |     0.020 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        79 |        21 |       100 | 
+    ##                  |     0.790 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+z-score标准化和normalize均一化数据无差异；
+
+step 6. Testing alternative values of k
+---------------------------------------
+
+-   尝试多个k值评估错误率
+
+### k = 1
+
+``` r
+wbcd_test_pred_1 <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 1)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred_1, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred_1 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        73 |         4 |        77 | 
+    ##                  |     0.948 |     0.052 |     0.770 | 
+    ##                  |     0.973 |     0.160 |           | 
+    ##                  |     0.730 |     0.040 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         2 |        21 |        23 | 
+    ##                  |     0.087 |     0.913 |     0.230 | 
+    ##                  |     0.027 |     0.840 |           | 
+    ##                  |     0.020 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        75 |        25 |       100 | 
+    ##                  |     0.750 |     0.250 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+### k = 5
+
+``` r
+wbcd_test_pred_5 <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 5)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred_5, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred_5 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        73 |         4 |        77 | 
+    ##                  |     0.948 |     0.052 |     0.770 | 
+    ##                  |     1.000 |     0.148 |           | 
+    ##                  |     0.730 |     0.040 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         0 |        23 |        23 | 
+    ##                  |     0.000 |     1.000 |     0.230 | 
+    ##                  |     0.000 |     0.852 |           | 
+    ##                  |     0.000 |     0.230 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        73 |        27 |       100 | 
+    ##                  |     0.730 |     0.270 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+### k = 11
+
+``` r
+wbcd_test_pred_11 <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 11)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred_11, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred_11 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        76 |         1 |        77 | 
+    ##                  |     0.987 |     0.013 |     0.770 | 
+    ##                  |     0.987 |     0.043 |           | 
+    ##                  |     0.760 |     0.010 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         1 |        22 |        23 | 
+    ##                  |     0.043 |     0.957 |     0.230 | 
+    ##                  |     0.013 |     0.957 |           | 
+    ##                  |     0.010 |     0.220 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        77 |        23 |       100 | 
+    ##                  |     0.770 |     0.230 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+### k = 15
+
+``` r
+wbcd_test_pred_15 <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 15)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred_15, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred_15 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        77 |         0 |        77 | 
+    ##                  |     1.000 |     0.000 |     0.770 | 
+    ##                  |     0.975 |     0.000 |           | 
+    ##                  |     0.770 |     0.000 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         2 |        21 |        23 | 
+    ##                  |     0.087 |     0.913 |     0.230 | 
+    ##                  |     0.025 |     1.000 |           | 
+    ##                  |     0.020 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        79 |        21 |       100 | 
+    ##                  |     0.790 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ## 
+
+### k = 27
+
+``` r
+wbcd_test_pred_27 <- knn(train = wbcd_train, test = wbcd_test, cl = wbcd_train_labels, 
+    k = 27)
+CrossTable(x = wbcd_test_labels, y = wbcd_test_pred_27, prop.chisq = FALSE)
+```
+
+    ## 
+    ##  
+    ##    Cell Contents
+    ## |-------------------------|
+    ## |                       N |
+    ## |           N / Row Total |
+    ## |           N / Col Total |
+    ## |         N / Table Total |
+    ## |-------------------------|
+    ## 
+    ##  
+    ## Total Observations in Table:  100 
+    ## 
+    ##  
+    ##                  | wbcd_test_pred_27 
+    ## wbcd_test_labels |    Benign | Malignant | Row Total | 
+    ## -----------------|-----------|-----------|-----------|
+    ##           Benign |        77 |         0 |        77 | 
+    ##                  |     1.000 |     0.000 |     0.770 | 
+    ##                  |     0.975 |     0.000 |           | 
+    ##                  |     0.770 |     0.000 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##        Malignant |         2 |        21 |        23 | 
+    ##                  |     0.087 |     0.913 |     0.230 | 
+    ##                  |     0.025 |     1.000 |           | 
+    ##                  |     0.020 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ##     Column Total |        79 |        21 |       100 | 
+    ##                  |     0.790 |     0.210 |           | 
+    ## -----------------|-----------|-----------|-----------|
+    ## 
+    ##
