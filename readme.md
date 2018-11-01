@@ -4,4 +4,4 @@
  
  * [k_NN](https://github.com/yi1873/machine_learning/blob/master/k_NN/k_NN.md) : Diagnosing breast cancer with the k-NN algorithm
  
- 
+ * Naive Bayes
