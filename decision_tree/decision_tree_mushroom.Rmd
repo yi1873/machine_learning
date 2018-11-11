@@ -1,0 +1,50 @@
+---
+title: " Identifying poisonousmushrooms with rule learners"
+date: '`r format(Sys.time(), "%B %d, %Y")`'
+output: github_document
+---
+
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Information
+* 数据获取 https://github.com/stedy/Machine-Learning-with-R-datasets
+* R markdown整理 https://github.com/yi1873/machine_learning
+
+## Step 1. Prepare data
+
+* 读取数据
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+mushrooms <- read.csv("../data/mushrooms.csv", stringsAsFactors = TRUE)
+str(mushrooms)
+
+mushrooms$veil_type <- NULL
+table(mushrooms$type)
+```
+
+
+## Step 2. Training a model on the data
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+library(RWeka)
+
+mushroom_1R <- OneR(type ~ ., data = mushrooms)
+mushroom_1R
+```
+
+## Step 3. Evaluating model performance
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+summary(mushroom_1R)
+```
+
+## Step 4. Improving model performance
+
+* Boosting the accuracy of decision trees
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+mushroom_JRip <- JRip(type ~ ., data = mushrooms)
+mushroom_JRip
+
+```
+
+
