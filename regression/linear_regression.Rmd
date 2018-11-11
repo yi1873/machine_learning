@@ -1,0 +1,67 @@
+---
+title: "Predicting medical expenses using linear regression"
+author: "xiang_zhi_@126.com"
+date: '`r format(Sys.time(), "%B %d, %Y")`'
+output: github_document
+---
+
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Information
+* 数据获取 https://github.com/stedy/Machine-Learning-with-R-datasets
+* R markdown整理 https://github.com/yi1873/machine_learning
+
+## Step 1. Prepare data
+
+* 读取数据
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+insurance <- read.csv("../data/insurance.csv", stringsAsFactors = TRUE)
+
+str(insurance)
+
+summary(insurance$charges) 
+hist(insurance$charges)
+
+table(insurance$region)
+```
+
+* Exploring relationships among features – the correlation matrix
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+cor(insurance[c("age", "bmi", "children", "charges")])
+```
+
+* Visualizing relationships among features – the scatterplot matrix
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+pairs(insurance[c("age", "bmi", "children", "charges")])
+
+library(psych)
+pairs.panels(insurance[c("age", "bmi", "children", "charges")])
+```
+
+## Step 2. Training a model on the data
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+ins_model <- lm(charges ~ age + children + bmi + sex + smoker + region, data = insurance)
+
+ins_model <- lm(charges ~ ., data = insurance)
+ins_model
+```
+
+## Step 3. Evaluating model performance
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+summary(ins_model)
+```
+
+## Step 4. Improving model performance
+
+* Model specification – adding non-linear relationships
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+insurance$age2 <- insurance$age^2
+insurance$bmi30 <- ifelse(insurance$bmi >= 30, 1, 0)
+ins_model2 <- lm(charges ~ age + age2 + children + bmi + sex + bmi30*smoker + region, data = insurance)
+summary(ins_model2)
+```
+
+

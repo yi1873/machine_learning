@@ -1,0 +1,84 @@
+---
+title: "Estimating the quality of wines with regression trees and model trees"
+author: "xiang_zhi_@126.com"
+date: '`r format(Sys.time(), "%B %d, %Y")`'
+output: github_document
+---
+
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Information
+* 数据获取 https://github.com/stedy/Machine-Learning-with-R-datasets
+* R markdown整理 https://github.com/yi1873/machine_learning
+
+## Step 1. Prepare data
+
+* 读取数据
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+wine <- read.csv("../data/whitewines.csv")
+
+str(wine)
+
+hist(wine$quality)
+
+```
+
+
+## Step 2. Training a model on the data
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+library(rpart)
+
+wine_train <- wine[1:3750, ]
+wine_test <- wine[3751:4898, ]
+
+m.rpart <- rpart(quality ~ ., data = wine_train)
+m.rpart
+```
+
+* Visualizing decision trees
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+library(rpart.plot)
+
+rpart.plot(m.rpart, digits = 3)
+rpart.plot(m.rpart, digits = 4, fallen.leaves = TRUE, type = 3, extra = 101)
+```
+
+## Step 3. Evaluating model performance
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+p.rpart <- predict(m.rpart, wine_test)
+summary(p.rpart)
+summary(wine_test$quality)
+cor(p.rpart, wine_test$quality)
+```
+
+* Measuring performance with the mean absolute error
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+MAE <- function(actual, predicted){ 
+  mean(abs(actual - predicted))
+} 
+
+MAE(p.rpart, wine_test$quality)
+
+MAE(mean(wine_train$quality), wine_test$quality)
+```
+
+## Step 4. Improving model performance
+
+* Model specification – adding non-linear relationships
+```{r, eval=T, echo = T, tidy = TRUE, size="small", cache=FALSE, warning=FALSE}
+library(RWeka)
+m.m5p <- M5P(quality ~ ., data = wine_train)
+m.m5p
+
+summary(m.m5p)
+
+p.m5p <- predict(m.m5p, wine_test)
+summary(p.m5p)
+
+MAE(wine_test$quality, p.m5p)
+```
+
+
