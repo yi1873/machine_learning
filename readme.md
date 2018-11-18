@@ -10,3 +10,4 @@
 
 * [Regression](https://github.com/yi1873/machine_learning/tree/master/regression)
 * [Nerual Network](https://github.com/yi1873/machine_learning/blob/master/neural_network/neural_network.md)
+* [SVMs](https://github.com/yi1873/machine_learning/blob/master/SVM/SVM.md)
